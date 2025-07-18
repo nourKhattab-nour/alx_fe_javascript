@@ -8,12 +8,8 @@ let quotes = [
 // DOM elements
 const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuoteBtn = document.getElementById('newQuote');
-const showFormBtn = document.getElementById('showFormBtn');
-const quoteForm = document.getElementById('quoteForm');
-const addQuoteBtn = document.getElementById('addQuoteBtn');
-const cancelFormBtn = document.getElementById('cancelFormBtn');
-const quoteTextInput = document.getElementById('quoteText');
-const quoteCategoryInput = document.getElementById('quoteCategory');
+const createFormBtn = document.getElementById('createFormBtn');
+const formContainer = document.getElementById('formContainer');
 
 // Initialize the app
 function init() {
@@ -21,9 +17,7 @@ function init() {
   
   // Event listeners
   newQuoteBtn.addEventListener('click', showRandomQuote);
-  showFormBtn.addEventListener('click', showAddQuoteForm);
-  addQuoteBtn.addEventListener('click', addQuote);
-  cancelFormBtn.addEventListener('click', hideAddQuoteForm);
+  createFormBtn.addEventListener('click', createAddQuoteForm);
 }
 
 // Display random quote
@@ -44,25 +38,78 @@ function showRandomQuote() {
   `;
 }
 
-// Show the add quote form
-function showAddQuoteForm() {
-  quoteForm.style.display = 'block';
-  showFormBtn.style.display = 'none';
-  quoteTextInput.focus();
+// Create the add quote form dynamically
+function createAddQuoteForm() {
+  // Clear any existing form
+  formContainer.innerHTML = '';
+  
+  // Create form elements
+  const form = document.createElement('form');
+  const textLabel = document.createElement('label');
+  const textInput = document.createElement('input');
+  const categoryLabel = document.createElement('label');
+  const categoryInput = document.createElement('input');
+  const submitBtn = document.createElement('button');
+  const cancelBtn = document.createElement('button');
+  
+  // Set up text input
+  textLabel.textContent = 'Quote Text:';
+  textInput.type = 'text';
+  textInput.id = 'quoteText';
+  textInput.required = true;
+  textInput.placeholder = 'Enter your quote here';
+  
+  // Set up category input
+  categoryLabel.textContent = 'Category:';
+  categoryInput.type = 'text';
+  categoryInput.id = 'quoteCategory';
+  categoryInput.required = true;
+  categoryInput.placeholder = 'Enter category (e.g., inspiration)';
+  
+  // Set up buttons
+  submitBtn.type = 'submit';
+  submitBtn.textContent = 'Add Quote';
+  cancelBtn.type = 'button';
+  cancelBtn.textContent = 'Cancel';
+  
+  // Add classes for styling
+  form.className = 'form-container';
+  
+  // Build form structure
+  form.appendChild(textLabel);
+  form.appendChild(textInput);
+  form.appendChild(document.createElement('br'));
+  form.appendChild(categoryLabel);
+  form.appendChild(categoryInput);
+  form.appendChild(document.createElement('br'));
+  form.appendChild(submitBtn);
+  form.appendChild(cancelBtn);
+  
+  // Add form to container
+  formContainer.appendChild(form);
+  
+  // Focus on first input
+  textInput.focus();
+  
+  // Form submission handler
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    addQuote();
+  });
+  
+  // Cancel button handler
+  cancelBtn.addEventListener('click', function() {
+    formContainer.innerHTML = '';
+  });
 }
 
-// Hide the add quote form
-function hideAddQuoteForm() {
-  quoteForm.style.display = 'none';
-  showFormBtn.style.display = 'inline-block';
-  quoteTextInput.value = '';
-  quoteCategoryInput.value = '';
-}
-
-// Add new quote
+// Add new quote to the array
 function addQuote() {
-  const text = quoteTextInput.value.trim();
-  const category = quoteCategoryInput.value.trim();
+  const textInput = document.getElementById('quoteText');
+  const categoryInput = document.getElementById('quoteCategory');
+  
+  const text = textInput.value.trim();
+  const category = categoryInput.value.trim();
 
   if (!text || !category) {
     alert('Please fill in both fields');
@@ -72,8 +119,10 @@ function addQuote() {
   // Add to quotes array
   quotes.push({ text, category });
   
-  // Update UI
-  hideAddQuoteForm();
+  // Clear form
+  formContainer.innerHTML = '';
+  
+  // Show the new quote
   showRandomQuote();
   
   // Notify user
