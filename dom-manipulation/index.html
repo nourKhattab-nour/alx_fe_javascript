@@ -14,7 +14,85 @@
     #quoteDisplay {
       margin: 30px 0;
       padding: 20px;
+      border-left: 5px solid #3498db;<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Quote Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    #quoteDisplay {
+      margin: 30px 0;
+      padding: 20px;
       border-left: 5px solid #3498db;
+      background-color: #f8f9fa;
+      min-height: 100px;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .form-container {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+    }
+    .form-container input {
+      padding: 8px;
+      margin: 5px;
+      width: 300px;
+      display: block;
+    }
+    .storage-actions {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+    }
+    #lastViewed {
+      font-style: italic;
+      color: #6c757d;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dynamic Quote Generator</h1>
+  
+  <div id="quoteDisplay"></div>
+  <div id="lastViewed"></div>
+  
+  <button id="newQuote">Show Random Quote</button>
+  <button id="createFormBtn">Add New Quote</button>
+  
+  <div id="formContainer"></div>
+  
+  <div class="storage-actions">
+    <h3>Data Management</h3>
+    <button id="exportBtn">Export Quotes (JSON)</button>
+    <input type="file" id="importFile" accept=".json" style="display: none;">
+    <button onclick="document.getElementById('importFile').click()">Import Quotes (JSON)</button>
+    <button id="clearStorageBtn">Clear All Quotes</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
       background-color: #f8f9fa;
     }
     button {
