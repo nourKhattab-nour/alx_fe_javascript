@@ -23,7 +23,7 @@ function init() {
   // Event listeners
   newQuoteBtn.addEventListener('click', showRandomQuote);
   createFormBtn.addEventListener('click', createAddQuoteForm);
-  exportBtn.addEventListener('click', exportToJson);
+  exportBtn.addEventListener('click', exportToJsonFile); // Updated to use exportToJsonFile
   importFile.addEventListener('change', importFromJsonFile);
   clearStorageBtn.addEventListener('click', clearStorage);
 }
@@ -128,22 +128,32 @@ function addQuote() {
   alert('Quote added successfully!');
 }
 
-// Export quotes to JSON file
-function exportToJson() {
+// Export quotes to JSON file using Blob
+function exportToJsonFile() {
   if (quotes.length === 0) {
     alert('No quotes to export');
     return;
   }
   
-  const dataStr = JSON.stringify(quotes, null, 2);
-  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-  
-  const exportFileDefaultName = 'quotes-export.json';
-  
-  const linkElement = document.createElement('a');
-  linkElement.setAttribute('href', dataUri);
-  linkElement.setAttribute('download', exportFileDefaultName);
-  linkElement.click();
+  try {
+    const jsonString = JSON.stringify(quotes, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'quotes-export.json';
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    alert(`Error exporting quotes: ${error.message}`);
+  }
 }
 
 // Import quotes from JSON file
