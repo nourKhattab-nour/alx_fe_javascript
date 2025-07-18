@@ -1,4 +1,37 @@
-// Previous configuration and state variables remain the same...
+// Configuration
+const API_URL = 'https://jsonplaceholder.typicode.com/posts'; // Mock API
+const SYNC_INTERVAL = 30000; // 30 seconds
+const STORAGE_KEY = 'quoteGenerator_quotes';
+const LAST_SYNC_KEY = 'quoteGenerator_lastSync';
+const SERVER_VERSION_KEY = 'quoteGenerator_serverVersion';
+
+// State variables
+let quotes = [];
+let syncInProgress = false;
+let serverVersion = 0;
+let syncInterval;
+
+// DOM elements
+const syncStatus = document.getElementById('syncStatus');
+const conflictNotice = document.getElementById('conflictNotice');
+const syncNowBtn = document.getElementById('syncNowBtn');
+
+// Initialize the app
+async function init() {
+  loadQuotes();
+  startSyncInterval();
+  await syncQuotes(); // Initial sync
+  
+  // Event listeners
+  syncNowBtn.addEventListener('click', () => syncQuotes(true));
+  // Previous event listeners remain
+}
+
+// Start periodic syncing
+function startSyncInterval() {
+  if (syncInterval) clearInterval(syncInterval);
+  syncInterval = setInterval(() => syncQuotes(), SYNC_INTERVAL);
+}
 
 // Main sync function
 async function syncQuotes(manualSync = false) {
@@ -29,7 +62,7 @@ async function syncQuotes(manualSync = false) {
     
     updateSyncStatus('Sync successful', 'success');
     if (manualSync) {
-      alert('Quotes synced with server!'); // Added this alert
+      alert('Quotes synced with server!');
       showNotification('Quotes synchronized successfully!');
     }
   } catch (error) {
@@ -176,13 +209,11 @@ function showConflictResolution(conflicts) {
   conflictNotice.style.display = 'block';
   
   document.getElementById('acceptAllServerBtn').addEventListener('click', () => {
-    // Server versions already applied in handleServerResponse
     conflictNotice.style.display = 'none';
     showNotification('All conflicts resolved using server versions');
   });
   
   document.getElementById('reviewBtn').addEventListener('click', () => {
-    // In a real app, you would implement detailed conflict resolution
     showNotification('Opening detailed conflict resolution view...');
     conflictNotice.style.display = 'none';
   });
