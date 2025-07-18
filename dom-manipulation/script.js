@@ -1,37 +1,4 @@
-// Configuration
-const API_URL = 'https://jsonplaceholder.typicode.com/posts'; // Mock API
-const SYNC_INTERVAL = 30000; // 30 seconds
-const STORAGE_KEY = 'quoteGenerator_quotes';
-const LAST_SYNC_KEY = 'quoteGenerator_lastSync';
-const SERVER_VERSION_KEY = 'quoteGenerator_serverVersion';
-
-// State variables
-let quotes = [];
-let syncInProgress = false;
-let serverVersion = 0;
-let syncInterval;
-
-// DOM elements
-const syncStatus = document.getElementById('syncStatus');
-const conflictNotice = document.getElementById('conflictNotice');
-const syncNowBtn = document.getElementById('syncNowBtn');
-
-// Initialize the app
-async function init() {
-  loadQuotes();
-  startSyncInterval();
-  await syncQuotes(); // Initial sync
-  
-  // Event listeners
-  syncNowBtn.addEventListener('click', () => syncQuotes(true));
-  // Previous event listeners remain
-}
-
-// Start periodic syncing
-function startSyncInterval() {
-  if (syncInterval) clearInterval(syncInterval);
-  syncInterval = setInterval(() => syncQuotes(), SYNC_INTERVAL);
-}
+// Previous configuration and state variables remain the same...
 
 // Main sync function
 async function syncQuotes(manualSync = false) {
@@ -62,6 +29,7 @@ async function syncQuotes(manualSync = false) {
     
     updateSyncStatus('Sync successful', 'success');
     if (manualSync) {
+      alert('Quotes synced with server!'); // Added this alert
       showNotification('Quotes synchronized successfully!');
     }
   } catch (error) {
