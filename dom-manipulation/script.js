@@ -32,12 +32,9 @@ async function init() {
 function loadQuotes() {
   const storedQuotes = localStorage.getItem(STORAGE_KEY);
   quotes = storedQuotes ? JSON.parse(storedQuotes) : getDefaultQuotes();
-  
-  // Load server version
   serverVersion = parseInt(localStorage.getItem(SERVER_VERSION_KEY)) || 0;
 }
 
-// Get default quotes if none in storage
 function getDefaultQuotes() {
   return [
     { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "inspiration" },
@@ -51,7 +48,7 @@ function saveQuotes() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
 }
 
-// Fetch quotes from server
+// Fetch quotes from server with GET
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(`${API_URL}?_limit=5`);
@@ -59,6 +56,25 @@ async function fetchQuotesFromServer() {
     return await response.json();
   } catch (error) {
     console.error('Failed to fetch quotes:', error);
+    throw error;
+  }
+}
+
+// Send quotes to server with POST
+async function postQuotesToServer(quotesToSend) {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(quotesToSend)
+    });
+    
+    if (!response.ok) throw new Error('Failed to save quotes');
+    return await response.json();
+  } catch (error) {
+    console.error('Error posting quotes:', error);
     throw error;
   }
 }
@@ -71,10 +87,16 @@ async function checkForUpdates() {
   updateSyncStatus('Syncing with server...', 'syncing');
   
   try {
-    const lastSync = localStorage.getItem(LAST_SYNC_KEY);
+    // First push local changes
+    const localChanges = quotes.filter(q => q.source === 'local');
+    if (localChanges.length > 0) {
+      await postQuotesToServer(localChanges);
+    }
+    
+    // Then pull server changes
     const serverData = await fetchQuotesFromServer();
     const serverQuotes = transformServerData(serverData);
-    const serverDataVersion = Date.now(); // Simulate server version
+    const serverDataVersion = Date.now();
     
     await handleServerResponse(serverQuotes, serverDataVersion);
     updateSyncStatus('Sync successful', 'success');
@@ -86,7 +108,6 @@ async function checkForUpdates() {
   }
 }
 
-// Transform mock API data to our quote format
 function transformServerData(serverData) {
   return serverData.map(post => ({
     text: post.title,
@@ -97,56 +118,38 @@ function transformServerData(serverData) {
   }));
 }
 
-// Handle server response and merge changes
 async function handleServerResponse(serverQuotes, newServerVersion) {
-  if (newServerVersion <= serverVersion) {
-    return; // No new updates
-  }
-  
+  if (newServerVersion <= serverVersion) return;
+
   const localQuotes = [...quotes];
   let conflicts = [];
-  
-  // Merge strategy: Server wins for conflicts
   const mergedQuotes = [...localQuotes];
   
   serverQuotes.forEach(serverQuote => {
     const existingIndex = mergedQuotes.findIndex(q => q.id === serverQuote.id);
     
     if (existingIndex >= 0) {
-      // Check if local version differs
       const localQuote = mergedQuotes[existingIndex];
       if (JSON.stringify(localQuote) !== JSON.stringify(serverQuote)) {
-        conflicts.push({
-          local: localQuote,
-          server: serverQuote
-        });
+        conflicts.push({ local: localQuote, server: serverQuote });
       }
-      // Server wins
       mergedQuotes[existingIndex] = serverQuote;
     } else {
-      // New quote from server
       mergedQuotes.push(serverQuote);
     }
   });
   
-  // Update local data
   quotes = mergedQuotes;
   serverVersion = newServerVersion;
   saveQuotes();
   localStorage.setItem(SERVER_VERSION_KEY, serverVersion);
   localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
   
-  // Show conflicts if any
-  if (conflicts.length > 0) {
-    showConflicts(conflicts);
-  }
-  
-  // Refresh UI
+  if (conflicts.length > 0) showConflicts(conflicts);
   populateCategories();
   showFilteredQuotes();
 }
 
-// Show conflict resolution UI
 function showConflicts(conflicts) {
   conflictNotice.innerHTML = `
     <h4>${conflicts.length} Conflict(s) Detected</h4>
@@ -168,7 +171,6 @@ function showConflicts(conflicts) {
   });
 }
 
-// Update sync status UI
 function updateSyncStatus(message, type) {
   syncStatus.textContent = message;
   syncStatus.className = `sync-status ${type}`;
@@ -183,7 +185,6 @@ function updateSyncStatus(message, type) {
   }
 }
 
-// Add quote function with sync trigger
 function addQuote() {
   const textInput = document.getElementById('quoteText');
   const categoryInput = document.getElementById('quoteCategory');
@@ -212,5 +213,4 @@ function addQuote() {
   setTimeout(checkForUpdates, 2000);
 }
 
-// Initialize the application
 document.addEventListener('DOMContentLoaded', init);
