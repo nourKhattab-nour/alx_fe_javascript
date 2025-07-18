@@ -37,9 +37,30 @@ function loadQuotes() {
   serverVersion = parseInt(localStorage.getItem(SERVER_VERSION_KEY)) || 0;
 }
 
+// Get default quotes if none in storage
+function getDefaultQuotes() {
+  return [
+    { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "inspiration" },
+    { text: "Life is what happens when you're busy making other plans.", category: "life" },
+    { text: "In the middle of difficulty lies opportunity.", category: "wisdom" }
+  ];
+}
+
 // Save quotes to local storage
 function saveQuotes() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
+}
+
+// Fetch quotes from server
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(`${API_URL}?_limit=5`);
+    if (!response.ok) throw new Error('Server error');
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch quotes:', error);
+    throw error;
+  }
 }
 
 // Check for updates from server
@@ -51,11 +72,7 @@ async function checkForUpdates() {
   
   try {
     const lastSync = localStorage.getItem(LAST_SYNC_KEY);
-    const response = await fetch(`${API_URL}?_limit=5`); // Simulate getting updates
-    
-    if (!response.ok) throw new Error('Server error');
-    
-    const serverData = await response.json();
+    const serverData = await fetchQuotesFromServer();
     const serverQuotes = transformServerData(serverData);
     const serverDataVersion = Date.now(); // Simulate server version
     
@@ -75,7 +92,8 @@ function transformServerData(serverData) {
     text: post.title,
     category: `server-${post.userId}`,
     source: 'server',
-    id: post.id
+    id: post.id,
+    lastModified: Date.now()
   }));
 }
 
@@ -141,13 +159,11 @@ function showConflicts(conflicts) {
   conflictNotice.style.display = 'block';
   
   document.getElementById('acceptServerBtn').addEventListener('click', () => {
-    // Already accepted server version in handleServerResponse
     conflictNotice.style.display = 'none';
   });
   
   document.getElementById('viewChangesBtn').addEventListener('click', () => {
-    // In a real app, you'd show a detailed diff view
-    alert(`Showing details for ${conflicts.length} conflicts. In a real app, this would open a detailed comparison view.`);
+    alert(`Showing details for ${conflicts.length} conflicts.`);
     conflictNotice.style.display = 'none';
   });
 }
@@ -157,7 +173,6 @@ function updateSyncStatus(message, type) {
   syncStatus.textContent = message;
   syncStatus.className = `sync-status ${type}`;
   
-  // Auto-hide success messages after 5 seconds
   if (type === 'success') {
     setTimeout(() => {
       if (syncStatus.textContent === message) {
@@ -168,7 +183,7 @@ function updateSyncStatus(message, type) {
   }
 }
 
-// Add this to your addQuote function to set local modification flag
+// Add quote function with sync trigger
 function addQuote() {
   const textInput = document.getElementById('quoteText');
   const categoryInput = document.getElementById('quoteCategory');
@@ -194,7 +209,6 @@ function addQuote() {
   showFilteredQuotes();
   alert('Quote added successfully!');
   
-  // Trigger sync after local changes
   setTimeout(checkForUpdates, 2000);
 }
 
